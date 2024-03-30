@@ -1,12 +1,12 @@
 from rest_framework import serializers
 
-from core.models import MosquitoImages
+from core.models import Images, System, Images, AreaCoverage
 
 class MosquitoImagesSerializer(serializers.ModelSerializer):
     secret_key = serializers.CharField(write_only=True)
 
     class Meta:
-        model = MosquitoImages
+        model = Images
         fields = [
             "image",
             "secret_key",
@@ -53,4 +53,70 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
     #         data.pop("uploaded_images")
     #     return super().run_validation(data)
 
+class SystemSerializer(serializers.ModelSerializer):
+    # secret_key = serializers.CharField(write_only=True)
+    def __init__(self, *args, **kwargs):
+        detail = kwargs.pop('detail', False)
+        self.detail = detail
+        super(SystemSerializer, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = System
+        fields = "id", "name", "description", "image", "location_name", "location_latitude", "location_longitude", "location_radius","latest_status"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if self.detail:
+            return {
+                "id": data["id"],
+                "name": data["name"],
+                "description": data["description"],
+                "image": data["image"],
+                "location":{
+                    "name": data["location_name"],
+                    "latitude": data["location_latitude"],
+                    "longitude": data["location_longitude"],
+                    "radius": data["location_radius"],
+                },
+                "status": instance.latest_status,
+  
+            }
+        else:
+            return {
+                "id": data["id"],
+                "name": data["name"],
+            }
+        return data
     
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Images
+        fields = "__all__"
+        
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return {
+            "time": data["date_uploaded"],
+            "image": data["photo"],
+            "location": instance.area.area_name,
+            "count" : data["detected_mosquito_count"]
+        }
+    
+class AreaCoverageSerializer(serializers.ModelSerializer):
+    systems = SystemSerializer(many=True, detail=True)
+    class Meta:
+        model = AreaCoverage
+        fields = "__all__"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        return {
+            "id": data["id"],
+            "name": data["area_name"],
+            "description": data["description"],
+            "image": data["image"],
+            "latitude": data["area_latitude"],
+            "longitude": data["area_longitude"],
+            "systems": data["systems"]
+        }
