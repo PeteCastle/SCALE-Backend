@@ -9,3 +9,4 @@ django-storages[google]==1.13.2
 google-cloud-storage==2.7.0
 djangorestframework==3.14.0
 Pillow==10.1.0
+Faker
