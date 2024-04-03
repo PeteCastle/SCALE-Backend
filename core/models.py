@@ -39,7 +39,7 @@ class SystemStatus(models.Model):
     id = models.AutoField(primary_key=True)
     status = models.BooleanField()
     system = models.ForeignKey('System', on_delete=models.CASCADE, related_name="status")
-    last_updated = models.DateTimeField(auto_now=True)
+    last_updated = models.DateTimeField(auto_now_add=True)
 
 class SystemFumigation(models.Model):
     id = models.AutoField(primary_key=True)
@@ -51,7 +51,7 @@ class SystemWaterLevel(models.Model):
     id = models.AutoField(primary_key=True)
     system = models.ForeignKey('System', on_delete=models.CASCADE)
     water_level = models.FloatField()
-    last_updated = models.DateTimeField(auto_now=True)
+    last_updated = models.DateTimeField(auto_now_add=True)
 
 class AreaCoverage(models.Model):
     id = models.AutoField(primary_key=True)
