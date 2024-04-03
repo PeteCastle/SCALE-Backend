@@ -15,7 +15,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import io
-from google.cloud import secretmanager
 
 load_dotenv(".env")
 
@@ -97,6 +96,7 @@ DATABASES = {
 }
 
 
+
 # DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 # STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 # GS_BUCKET_NAME = env('GS_BUCKET_NAME')
@@ -144,3 +144,11 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+AWS_S3_REGION_NAME = os.environ.get("SPACES_REGION_NAME")
+AWS_S3_ENDPOINT_URL = f"https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com"
+AWS_ACCESS_KEY_ID = os.environ.get("SPACES_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = os.environ.get("SPACES_SECRET_KEY")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("SPACES_BUCKET_NAME")
+                                       
