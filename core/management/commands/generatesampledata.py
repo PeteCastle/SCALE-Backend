@@ -75,10 +75,20 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"Successfully created {options['system_status_count']} system status entries.")
 
+        images = [
+            "mosquitoes/20240404-134756.jpg",
+            "mosquitoes/20240404-134819.jpg",
+            "mosquitoes/20240404-134839.gif",
+            "mosquitoes/20240404-134845.gif",
+            "mosquitoes/20240404-134850.gif",
+            "mosquitoes/20240404-134854.gif",
+        ]
         for _ in range(options['image_count']):
             system = fake.random_element(systems)
             area = fake.random_element(areas)
-            photo = fake.image_url()
+            photo = fake.random_element(images)
+
+            print(photo)
 
             now = timezone.now()
             hour_ago = now - timedelta(hours=1)

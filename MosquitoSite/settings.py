@@ -151,4 +151,5 @@ AWS_S3_ENDPOINT_URL = f"https://{AWS_S3_REGION_NAME}.digitaloceanspaces.com"
 AWS_ACCESS_KEY_ID = os.environ.get("SPACES_ACCESS_KEY")
 AWS_SECRET_ACCESS_KEY = os.environ.get("SPACES_SECRET_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("SPACES_BUCKET_NAME")
+AWS_DEFAULT_ACL = "public-read"
                                        
