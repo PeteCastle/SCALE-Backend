@@ -12,3 +12,4 @@ Pillow==10.1.0
 Faker
 boto3
 gunicorn
+django-cors-headers
