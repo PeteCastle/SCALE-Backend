@@ -41,6 +41,7 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",    
     "http://127.0.0.1:3000",
+    "https://coral-app-mlygs.ondigitalocean.app",
 ]
 CORS_ALLOW_HEADERS = ["*"]
 
