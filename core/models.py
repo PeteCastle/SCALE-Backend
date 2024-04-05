@@ -77,7 +77,19 @@ class Images(models.Model):
 
     prediction_time = models.FloatField()
 
-
     def __str__(self):
         return f"{self.system.name} - {self.area.area_name} - {self.date_uploaded}"
     
+
+class Detections(models.Model):
+    detection_id = models.IntegerField()
+    x1 = models.FloatField()
+    y1 = models.FloatField()
+    x2 = models.FloatField()
+    y2 = models.FloatField()
+    score = models.FloatField()
+    detected_time = models.DateTimeField(auto_now_add=False)
+    system = models.ForeignKey(System, on_delete=models.CASCADE, related_name="detections")
+
+    class Meta:
+        unique_together = ('detection_id', 'system')

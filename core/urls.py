@@ -11,7 +11,7 @@ from .views import (MosquitoImagesViewSet,
                     DashboardKPIViewSet)
 
 urlpatterns = [
-    path("mosquito/create", MosquitoImagesViewSet.as_view({"post": "create"})),
+    path("v1/mosquito/create", MosquitoImagesViewSet.as_view({"post": "create"})),
     path("v1/system/details", SystemViewSet.as_view({"get": "system_details"})),
     path("v1/system/list", SystemViewSet.as_view({"get": "system_list"})),
     path("v1/system/<int:system_id>/status", SystemViewSet.as_view({"get": "status"})),

@@ -17,7 +17,7 @@ from django.utils import timezone
 from django.db.models.functions import ExtractMonth, ExtractYear
 
 from datetime import timedelta
-
+from django.core.files.base import ContentFile
 
 
 # Create your views here.
@@ -26,25 +26,28 @@ class MosquitoImagesViewSet(viewsets.ModelViewSet):
     serializer_class = MosquitoImagesSerializer
 
     def create(self, request, *args, **kwargs):
-        # print(request.data['image'])
-
         image_data = base64.b64decode(request.data['image'])
+        secret_key = request.data['secret_key']
 
-        # Save the image or perform necessary operations here
-        # Example: save the image to a file
-        with open('received_image.jpg', 'wb') as file:
-            file.write(image_data)
-        serializer = self.get_serializer(request.POST, request.FILES)
-        # print(serializer)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        # print(serializer.data)
+        image_file = ContentFile(image_data, 'temp.jpg')
+
+        payload = {
+            'photo': image_file,
+            'secret_key': secret_key,
+        }
+
+    
+        serializer = self.get_serializer(data=payload)
+        if not serializer.is_valid():
+            print(serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            print("created)")
+            self.perform_create(serializer)
+     
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        
 
-    def perform_create(self, serializer):
-        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class SystemViewSet(viewsets.ModelViewSet):
     queryset = System.objects.all()

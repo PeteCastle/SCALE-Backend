@@ -13,3 +13,10 @@ Faker
 boto3
 gunicorn
 django-cors-headers
+# git+https://github.com/facebookresearch/detectron2.git
+torch==2.2.0
+torchvision==0.17
+tensorflow
+opencv-python
+scikit-image
+filterpy

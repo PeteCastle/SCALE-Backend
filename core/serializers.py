@@ -1,57 +1,67 @@
 from rest_framework import serializers
 
 from core.models import Images, System, Images, AreaCoverage
+import time
+
+from rcnn.predictor import RCNNPredictor
 
 class MosquitoImagesSerializer(serializers.ModelSerializer):
+    # image_bmp = serializers.SerializerMethodField()
     secret_key = serializers.CharField(write_only=True)
+    count = serializers.SerializerMethodField()
+
+    def get_count(self, obj):
+        return obj.system.detections.count()
 
     class Meta:
         model = Images
         fields = [
-            "image",
+            "photo",
             "secret_key",
+            "count"
+            # "image_bmp"
         ]
-        # fields = [
-        #     "id",
-        #     "content",
-        #     "parent_comment",
-        #     "uploaded_images",
-        #     "anonymous",
-        # ]   
-
-    # def create(self, validated_data):
-    #     reply_data = validated_data.copy()
-    #     if reply_data.get("uploaded_images"):
-    #         reply_data.pop("uploaded_images")
-
-    #     reply = Comment.objects.create(**reply_data)
-
-    #     if validated_data.get("uploaded_images"):
-    #         uploaded_images = validated_data.pop("uploaded_images")
-    #         for image in uploaded_images:
-    #             UserMedia.objects.create(reply=reply, image=image, author=reply.author)
+   
+    # def get_image_bmp(self, obj):
+    #     img = Image.open(obj.image)
         
-    #     return reply
-    
-    # def validate(self, fields):
-    #     # if not fields.get("project"):
-    #     #     raise serializers.ValidationError("Project ID is required.")
+    #     # new_width = int(self.context['request'].GET.get('width', img.width))
+    #     # new_height = int(self.context['request'].GET.get('height', img.height))
+ 
+    #     new_width= 100
+    #     new_height= 100
+    #     img = img.resize((new_width, new_height))
 
-    #     if fields.get("uploaded_images"):
-    #         if len(fields.get("uploaded_images")) > 5:
-    #             raise serializers.ValidationError("You can only upload a maximum of 5 images.")
-    #     return fields
+    #     img_bmp = img.convert('RGB')
+
+    #     buffer = io.BytesIO()
+    #     img_bmp.save(buffer, format='BMP')
+    #     # img_bmp_base64 = base64.b64encode(buffer.getvalue()).decode()
+    #     return buffer.getvalue()
+
+    def validate(self, fields):
+        secret_key = fields.get("secret_key")
+
+        system = System.objects.filter(secret_key=secret_key)
+
+        if secret_key is None or system.count() == 0:
+            raise serializers.ValidationError("Invalid secret key.")
+        
+        return {
+            "photo": fields.get("photo"),
+            "system": system.first(),
+            "area": system.first().coverage,
+        }
+        print(fields)
+
+    def create(self, validated_data):
+        start_time = time.time()
+        validated_data["photo"], validated_data['detected_mosquito_count'] = RCNNPredictor()(validated_data["photo"], validated_data["system"])
+        end_time = time.time()
+        validated_data['prediction_time'] = end_time - start_time
+        return Images.objects.create(**validated_data)
     
-    
-    # def run_validation(self, data=...):
-    #     data = data.copy()
-  
-    #     try:
-    #         if data.get("uploaded_images") == "":
-    #             data.pop("uploaded_images")
-    #     except MultiValueDictKeyError:
-    #         data.pop("uploaded_images")
-    #     return super().run_validation(data)
+
 
 class SystemSerializer(serializers.ModelSerializer):
     # secret_key = serializers.CharField(write_only=True)

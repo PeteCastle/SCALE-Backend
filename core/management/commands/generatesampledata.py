@@ -76,12 +76,10 @@ class Command(BaseCommand):
         self.stdout.write(f"Successfully created {options['system_status_count']} system status entries.")
 
         images = [
-            "mosquitoes/20240404-134756.jpg",
-            "mosquitoes/20240404-134819.jpg",
-            "mosquitoes/20240404-134839.gif",
-            "mosquitoes/20240404-134845.gif",
-            "mosquitoes/20240404-134850.gif",
-            "mosquitoes/20240404-134854.gif",
+            "mosquitoes/mosquitoes_system_1_2023-12-08T193733.272655.jpg",
+            "mosquitoes/mosquitoes_system_1_2023-12-08T193809.742889.jpg",
+            "mosquitoes/mosquitoes_system_1_2023-12-08T193958.340010.jpg",
+            "mosquitoes/433697814_392202480344703_433288004452797183_n.jpg",
         ]
         for _ in range(options['image_count']):
             system = fake.random_element(systems)
