@@ -20,3 +20,4 @@ tensorflow
 opencv-python
 scikit-image
 filterpy
+pandas
