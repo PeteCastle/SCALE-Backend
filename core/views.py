@@ -16,8 +16,9 @@ from django.utils import timezone
 
 from django.db.models.functions import ExtractMonth, ExtractYear, ExtractWeek
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.core.files.base import ContentFile
+from dateutil.relativedelta import relativedelta
 
 
 # Create your views here.
@@ -200,20 +201,44 @@ class DashboardFumigationViewSet(viewsets.ModelViewSet):
     def count_filtered_month(self, request, *args, **kwargs):
         month_date = request.query_params.get('date', None)
 
-        current_year = timezone.now().year
-        current_month = timezone.now().month
+        current_date = timezone.now()
+        current_year = current_date.year
+        current_month = current_date.month
+
+        # Calculate previous month and year
+        prev_date = current_date - relativedelta(months=1)
+        prev_year = prev_date.year
+        prev_month = prev_date.month
 
         data = SystemFumigation.objects \
         .annotate(month=ExtractMonth('fumigation_date')) \
         .annotate(year=ExtractYear('fumigation_date')) \
         .values('month', 'year') \
         .annotate(count=Count('*')) \
-        .order_by('year', 'month') \
-        .filter(year=current_year, month=current_month)
+        .order_by('year', 'month')
+
+        # Filter for current month
+        current_month_data = data.filter(year=current_year, month=current_month)
+
+        # Filter for previous month
+        prev_month_data = data.filter(year=prev_year, month=prev_month)
+
+        current_count = current_month_data[0]['count'] if current_month_data else 0
+        prev_month_count = prev_month_data[0]['count'] if prev_month_data else 0
+
+
+        if prev_month_count != 0:
+            change = ((current_count - prev_month_count) / prev_month_count) * 100
+        else:
+            change = 0 if current_count == 0 else 100
 
         return Response(
-            {"count":data[0]['count']}
-            )
+            {
+                "count": current_count,
+                "prev_month_count": prev_month_count,
+                "change": change
+            }
+        )
 
 class DashboardDetectionsViewset(viewsets.ModelViewSet):
     def history(self, request, *args, **kwargs):
@@ -263,22 +288,45 @@ class DashboardDetectionsViewset(viewsets.ModelViewSet):
         return Response(response)
    
     def count(self, request, *args, **kwargs):
+   
         month_date = request.query_params.get('date', None)
 
         if month_date:
-            print("Month date", month_date)
             dt_list = month_date.split('-')
             month_date = int(dt_list[1])
             month_year = int(dt_list[0])
+            current_date = datetime(month_year, month_date, 1).date()
             data = Images.objects.filter(date_uploaded__year=month_year, date_uploaded__month=month_date)
         else:
-            current_year = timezone.now().year
-            current_month = timezone.now().month
+            current_date = timezone.now()
+            current_year = current_date.year
+            current_month = current_date.month
             data = Images.objects.filter(date_uploaded__year=current_year, date_uploaded__month=current_month)
 
-        data = data.aggregate(total=Sum('detected_mosquito_count'))
+        # Calculate previous month and year
+        prev_date = current_date - relativedelta(months=1)
+        prev_year = prev_date.year
+        prev_month = prev_date.month
 
-        return Response(data)
+        # Filter for previous month
+        prev_data = Images.objects.filter(date_uploaded__year=prev_year, date_uploaded__month=prev_month)
+
+        current_count = data.aggregate(total=Sum('detected_mosquito_count'))['total'] or 0
+        prev_month_count = prev_data.aggregate(total=Sum('detected_mosquito_count'))['total'] or 0
+
+        # Calculate percentage change
+        if prev_month_count != 0:
+            change = ((current_count - prev_month_count) / prev_month_count) * 100
+        else:
+            change = 0 if current_count == 0 else 100
+
+        return Response(
+            {
+                "count": current_count,
+                "prev_month_count": prev_month_count,
+                "change": change
+            }
+        )
     
 class DashboardWaterLevelViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
@@ -334,7 +382,7 @@ class DashboardUptimeViewSet(viewsets.ModelViewSet):
             uptime_div = 25200
             data = data.annotate(date=TruncMonth('last_updated')).values('date').annotate(count=Count('date')).order_by('date')[:limit]
         else:
-            raise ValueError("Invalid value for 'by' parameter")
+            raise Response(f"Invalid value 'by'", status=400)
 
         response = {}
         for d in data:
