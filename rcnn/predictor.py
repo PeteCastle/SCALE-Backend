@@ -1,27 +1,26 @@
-# from tensorflow.keras.models import load_model
-# from detectron2.engine import DefaultTrainer
-# from detectron2.config import get_cfg
-# from detectron2 import model_zoo
-# import os
-# from detectron2.engine import DefaultPredictor
-# from detectron2.utils.visualizer import Visualizer, ColorMode
-# from detectron2.data.datasets import register_coco_instances
-# from detectron2.data import MetadataCatalog
+from tensorflow.keras.models import load_model
+from detectron2.engine import DefaultTrainer
+from detectron2.config import get_cfg
+from detectron2 import model_zoo
+import os
+from detectron2.engine import DefaultPredictor
+from detectron2.utils.visualizer import Visualizer, ColorMode
+from detectron2.data.datasets import register_coco_instances
+from detectron2.data import MetadataCatalog
 
-# from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile
 
-# from .sort import Sort
+from .sort import Sort
 from core.models import Images, System, Detections
 import numpy as np
-# import pandas as pd
-# from datetime import datetime
-# import cv2
-# from PIL import Image
+import pandas as pd
+from datetime import datetime
+import cv2
+from PIL import Image
 
 # Singleton class
 class RCNNPredictor:
     def __new__(cls,*args, **kwargs):
-        return
         if not hasattr(cls, 'instance'):
             cls.instance = super(RCNNPredictor, cls).__new__(cls,*args, **kwargs)
             cfg = get_cfg()
@@ -61,7 +60,6 @@ class RCNNPredictor:
     
     
     def __call__(self, img, system: System) -> np.ndarray:
-        return
         img_open = Image.open(img)
         img = np.array(img_open)
         print(img)
