@@ -8,7 +8,8 @@ from .views import (MosquitoImagesViewSet,
                     DashboardFumigationViewSet, 
                     DashboardDetectionsViewset, 
                     DashboardWaterLevelViewSet,
-                    DashboardKPIViewSet)
+                    DashboardKPIViewSet,
+                    DashboardUptimeViewSet)
 
 urlpatterns = [
     path("v1/mosquito/create", MosquitoImagesViewSet.as_view({"post": "create"})),
@@ -22,6 +23,7 @@ urlpatterns = [
 
     path("v1/dashboard/fumigations/date", DashboardFumigationViewSet.as_view({"get": "count_by_date"})),
     path("v1/dashboard/fumigations/system", DashboardFumigationViewSet.as_view({"get": "count_by_system"})),
+    path("v1/dashboard/fumigations/week", DashboardFumigationViewSet.as_view({"get": "count_by_week"})),
     path("v1/dashboard/fumigations/count", DashboardFumigationViewSet.as_view({"get": "count_filtered_month"})),
 
     path('v1/dashboard/detections/history', DashboardDetectionsViewset.as_view({"get": "history"})),
@@ -31,4 +33,6 @@ urlpatterns = [
     path('v1/dashboard/water_level/status', DashboardWaterLevelViewSet.as_view({"get": "retrieve"})),
 
     path('v1/dashboard/kpi', DashboardKPIViewSet.as_view({"get": "retrieve"})),
+
+    path('v1/dashboard/uptime', DashboardUptimeViewSet.as_view({"get": "retrieve"})),
 ]

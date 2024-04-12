@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from .serializers import MosquitoImagesSerializer, SystemSerializer, ImageSerializer, AreaCoverageSerializer
-from .models import Images, System, AreaCoverage, SystemFumigation, SystemWaterLevel
+from .models import Images, System, AreaCoverage, SystemFumigation, SystemWaterLevel, SystemStatus
 
 from django.db.models import Sum, Count, Max
-from django.db.models.functions import TruncDate, TruncMinute
+from django.db.models.functions import TruncDate, TruncMinute, TruncWeek, TruncMonth, TruncHour
 
 
 from rest_framework import viewsets
@@ -14,7 +14,7 @@ import base64
 from django.utils import timezone
 
 
-from django.db.models.functions import ExtractMonth, ExtractYear
+from django.db.models.functions import ExtractMonth, ExtractYear, ExtractWeek
 
 from datetime import timedelta
 from django.core.files.base import ContentFile
@@ -122,8 +122,6 @@ class DashboardFumigationViewSet(viewsets.ModelViewSet):
             current_month = timezone.now().month
             data = data.filter(fumigation_date__year=current_year, fumigation_date__month=current_month)
 
-
-        print(data.query)
         response = {}
         for d in data:
             try:
@@ -133,7 +131,40 @@ class DashboardFumigationViewSet(viewsets.ModelViewSet):
                 response[str(d['fumigation_date'])][d['name']] = d['count']
 
         return Response(response)
+    
+    def count_by_week(self, request, *args, **kwargs):
+        system_ids = request.query_params.get('system', None)
+        month_date = request.query_params.get('date', None)
 
+        data = System.objects.annotate(
+            fumigation_date=TruncWeek('systemfumigation__fumigation_date'),
+            
+        ).values('fumigation_date').annotate(
+            count=Count('systemfumigation'),
+            week_number=ExtractWeek('fumigation_date')
+        ).order_by('-fumigation_date')
+
+        if system_ids:
+            print("System ids", system_ids)
+            data = data.filter(id__in=system_ids.split(','))
+        
+        if month_date:
+            print("Month date", month_date)
+            dt_list = month_date.split('-')
+            month_date = int(dt_list[1])
+            month_year = int(dt_list[0])
+            data = data.filter(fumigation_date__year=month_year, fumigation_date__month=month_date)
+        else:
+            current_year = timezone.now().year
+            current_month = timezone.now().month
+            data = data.filter(fumigation_date__year=current_year, fumigation_date__month=current_month)
+
+        response = {}
+        for _, d in enumerate(data):
+            
+            response[f"Week {d['week_number']}"] = d['count']
+      
+        return Response(response)
 
     def count_by_system(self, request, *args, **kwargs):
         system_ids = request.query_params.get('system', None)
@@ -273,3 +304,44 @@ class DashboardKPIViewSet(viewsets.ModelViewSet):
 
         }
         )
+
+class DashboardUptimeViewSet(viewsets.ModelViewSet):
+    def retrieve(self, request, *args, **kwargs):
+        systems = request.query_params.get('system', None)
+        by = request.query_params.get('by', 'day')
+        limit = int(request.query_params.get('limit', 10))
+
+        if systems:
+            systems = [int(x) for x in systems.split(',')]
+            data = SystemStatus.objects.filter(system_id__in=systems, status=True,)
+        else:
+            data = SystemStatus.objects.filter(status=True)
+
+        if by == 'hour':
+            dt_str = "%H:%M:%S"
+            uptime_div = 60
+            data = data.annotate(date=TruncHour('last_updated')).values('date').annotate(count=Count('date')).order_by('date')[:limit]
+        elif by == 'day':
+            dt_str = "%Y-%m-%d"
+            uptime_div = 3600
+            data = data.annotate(date=TruncDate('last_updated')).values('date').annotate(count=Count('date')).order_by('date')[:limit]
+        elif by == 'week':
+            dt_str = "%Y-%m-%d"
+            uptime_div = 25200
+            data = data.annotate(date=TruncWeek('last_updated')).values('date').annotate(count=Count('date')).order_by('date')[:limit]
+        elif by == 'month':
+            dt_str = "%Y-%m"
+            uptime_div = 25200
+            data = data.annotate(date=TruncMonth('last_updated')).values('date').annotate(count=Count('date')).order_by('date')[:limit]
+        else:
+            raise ValueError("Invalid value for 'by' parameter")
+
+        response = {}
+        for d in data:
+            time = d['date'].strftime(dt_str)
+
+            uptime = int((d['count'] / uptime_div) * 100)
+            uptime = uptime if uptime < 100 else 100
+            response[time] = uptime
+
+        return Response(response)
