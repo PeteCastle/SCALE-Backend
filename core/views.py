@@ -19,7 +19,7 @@ from django.db.models.functions import ExtractMonth, ExtractYear, ExtractWeek
 from datetime import timedelta, datetime
 from django.core.files.base import ContentFile
 from dateutil.relativedelta import relativedelta
-
+import random
 
 # Create your views here.
 class MosquitoImagesViewSet(viewsets.ModelViewSet):
@@ -67,6 +67,9 @@ class SystemViewSet(viewsets.ModelViewSet):
         system = self.queryset.get(id = system_id)
         return Response({"message": system.latest_status})
     
+    def should_fumigate(self, request, system_id=None, *args, **kwargs):
+        return Response(random.randint(0, 1), status=status.HTTP_200_OK)
+
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Images.objects.all()
     serializer_class = ImageSerializer
@@ -135,7 +138,7 @@ class DashboardFumigationViewSet(viewsets.ModelViewSet):
     
     def count_by_week(self, request, *args, **kwargs):
         system_ids = request.query_params.get('system', None)
-        month_date = request.query_params.get('date', None)
+        # month_date = request.query_params.get('date', None)
 
         data = System.objects.annotate(
             fumigation_date=TruncWeek('systemfumigation__fumigation_date'),
@@ -145,7 +148,7 @@ class DashboardFumigationViewSet(viewsets.ModelViewSet):
             week_number=ExtractWeek('fumigation_date')
         ).order_by('-fumigation_date')
 
-        if system_ids:
+        if system_ids: 
             print("System ids", system_ids)
             data = data.filter(id__in=system_ids.split(','))
         
