@@ -61,6 +61,7 @@ class WaterLevelViewSet(viewsets.ModelViewSet):
         #     'water_level': water_level
         # }
         
+        print(request.data)
         print(request.POST)
         serializer = self.get_serializer(data=request.POST)
 
