@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import MosquitoImagesSerializer, SystemSerializer, ImageSerializer, AreaCoverageSerializer
+from .serializers import MosquitoImagesSerializer, SystemSerializer, ImageSerializer, AreaCoverageSerializer, WaterLevelSerializer
 from .models import Images, System, AreaCoverage, SystemFumigation, SystemWaterLevel, SystemStatus
 
 from django.db.models import Sum, Count, Max
@@ -49,6 +49,27 @@ class MosquitoImagesViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class WaterLevelViewSet(viewsets.ModelViewSet):
+    serializer_class  = WaterLevelSerializer
+    def create(self, request, *args, **kwargs):
+        # secret_key = request.data['secret_key']
+        # water_level = request.data['water_level']
+
+        # payload = {
+        #     'secret_key': secret_key,
+        #     'water_level': water_level
+        # }
+        serializer = self.get_serializer(data=request.POST)
+
+        if not serializer.is_valid():
+            print(serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else: 
+            self.perform_create(serializer)
+
+        return Response({"message": "Water level updated"}, status=status.HTTP_201_CREATED)
+
 
 class SystemViewSet(viewsets.ModelViewSet):
     queryset = System.objects.all()

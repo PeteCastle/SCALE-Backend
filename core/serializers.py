@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from core.models import Images, System, Images, AreaCoverage
+from core.models import Images, System, Images, AreaCoverage, SystemWaterLevel
 import time
 
 from rcnn.predictor import RCNNPredictor
@@ -22,23 +22,6 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
             # "image_bmp"
         ]
    
-    # def get_image_bmp(self, obj):
-    #     img = Image.open(obj.image)
-        
-    #     # new_width = int(self.context['request'].GET.get('width', img.width))
-    #     # new_height = int(self.context['request'].GET.get('height', img.height))
- 
-    #     new_width= 100
-    #     new_height= 100
-    #     img = img.resize((new_width, new_height))
-
-    #     img_bmp = img.convert('RGB')
-
-    #     buffer = io.BytesIO()
-    #     img_bmp.save(buffer, format='BMP')
-    #     # img_bmp_base64 = base64.b64encode(buffer.getvalue()).decode()
-    #     return buffer.getvalue()
-
     def validate(self, fields):
         secret_key = fields.get("secret_key")
 
@@ -61,7 +44,30 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
         validated_data['prediction_time'] = end_time - start_time
         return Images.objects.create(**validated_data)
     
+class WaterLevelSerializer(serializers.ModelSerializer):
+    secret_key = serializers.CharField(write_only=True)
+    water_level = serializers.FloatField(max_value=100, min_value=0)
 
+    class Meta:
+        model = SystemWaterLevel
+        fields = ["water_level","secret_key"]
+
+    def validate(self, fields):
+        secret_key = fields.get("secret_key")
+
+        system = System.objects.filter(secret_key=secret_key)
+
+        if secret_key is None or system.count() == 0:
+            raise serializers.ValidationError("Invalid secret key.")
+        
+        return {
+            "water_level": fields.get("water_level"),
+            "system": system.first()
+        }
+    
+    def create(self, validated_data):
+        return SystemWaterLevel.objects.create(**validated_data)
+        
 
 class SystemSerializer(serializers.ModelSerializer):
     # secret_key = serializers.CharField(write_only=True)
@@ -130,3 +136,21 @@ class AreaCoverageSerializer(serializers.ModelSerializer):
             "longitude": data["area_longitude"],
             "systems": data["systems"]
         }
+
+
+ # def get_image_bmp(self, obj):
+    #     img = Image.open(obj.image)
+        
+    #     # new_width = int(self.context['request'].GET.get('width', img.width))
+    #     # new_height = int(self.context['request'].GET.get('height', img.height))
+ 
+    #     new_width= 100
+    #     new_height= 100
+    #     img = img.resize((new_width, new_height))
+
+    #     img_bmp = img.convert('RGB')
+
+    #     buffer = io.BytesIO()
+    #     img_bmp.save(buffer, format='BMP')
+    #     # img_bmp_base64 = base64.b64encode(buffer.getvalue()).decode()
+    #     return buffer.getvalue()
