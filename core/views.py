@@ -60,6 +60,8 @@ class WaterLevelViewSet(viewsets.ModelViewSet):
         #     'secret_key': secret_key,
         #     'water_level': water_level
         # }
+        
+        print(request.POST)
         serializer = self.get_serializer(data=request.POST)
 
         if not serializer.is_valid():
