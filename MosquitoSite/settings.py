@@ -42,6 +42,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",    
     "http://127.0.0.1:3000", 
     "https://www.scale-anti-mosquito.site",
+    "http://192.168.137.1:8000", 
 ]
 CORS_ALLOW_HEADERS = ["*"]
 

@@ -7,6 +7,7 @@ from detectron2.engine import DefaultPredictor
 from detectron2.utils.visualizer import Visualizer, ColorMode
 from detectron2.data.datasets import register_coco_instances
 from detectron2.data import MetadataCatalog
+from django.utils import timezone
 
 from django.core.files.base import ContentFile
 
@@ -88,7 +89,7 @@ class RCNNPredictor:
                     'x2': x2,
                     'y2': y2,
                     'score': scores[i],
-                    'detected_time': datetime.now()
+                    'detected_time': timezone.now()
                 })
                 new_detection_count+=1
                 
