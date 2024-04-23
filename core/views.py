@@ -43,7 +43,6 @@ class MosquitoImagesViewSet(viewsets.ModelViewSet):
             print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            print("created)")
             self.perform_create(serializer)
      
         headers = self.get_success_headers(serializer.data)
