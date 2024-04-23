@@ -62,7 +62,6 @@ class RCNNPredictor:
     def __call__(self, img, system: System) -> np.ndarray:
         img_open = Image.open(img)
         img = np.array(img_open)
-        print(img)
         outputs = self.predictor(img)
         v = Visualizer(img[:, :, ::-1],
                    metadata= self.metadata,
