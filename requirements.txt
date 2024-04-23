@@ -21,3 +21,5 @@ opencv-python
 scikit-image
 filterpy
 pandas
+celery==5.4.0
+redis==5.0.3

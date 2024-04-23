@@ -3,12 +3,27 @@ from rest_framework import serializers
 from core.models import Images, System, Images, AreaCoverage, SystemWaterLevel
 import time
 
-from rcnn.predictor import RCNNPredictor
+from rcnn.predictor import predict
+from datetime import datetime
+from django.conf import settings
+import boto3
+from core.models import Detections
 
+from django.core.files.base import ContentFile
+ 
 class MosquitoImagesSerializer(serializers.ModelSerializer):
     # image_bmp = serializers.SerializerMethodField()
     secret_key = serializers.CharField(write_only=True)
     count = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        super(MosquitoImagesSerializer, self).__init__(*args, **kwargs)
+        self.s3 = boto3.client('s3', 
+                            region_name=settings.AWS_S3_REGION_NAME,
+                            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+                        )
 
     def get_count(self, obj):
         return obj.system.detections.count()
@@ -39,9 +54,45 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         start_time = time.time()
-        validated_data["photo"], validated_data['detected_mosquito_count'] = RCNNPredictor()(validated_data["photo"], validated_data["system"])
+
+        system = validated_data["system"]
+        image = validated_data["photo"]
+        file_name = f'temp/system_{system.id}_{datetime.now().isoformat()}.jpg'
+        self.s3.upload_fileobj(image, 
+                            settings.AWS_STORAGE_BUCKET_NAME,
+                            file_name
+                            )
+        
+        print(start_time - time.time())
+        
+        file_name, validated_data['detected_mosquito_count'], detections = predict.delay(file_name, validated_data["system"]).get()
+        
+        print(start_time - time.time())
+        file_obj = self.s3.get_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name)
+        file_content = file_obj['Body'].read()
+        print(start_time - time.time())
+
+        for d in detections:
+            Detections.objects.update_or_create(detection_id=id,system= d['detection_id'], defaults={
+                    'x1': d['x1'],
+                    'y1': d['y1'],
+                    'x2': d['x2'],
+                    'y2': d['y2'],
+                    'score': d['scores'],
+                    'detected_time': d['detected_time'],
+            })
+
+        print(start_time - time.time())
+        validated_data['photo'] = ContentFile(file_content,f'system_{system.id}_{datetime.now().isoformat()}.jpg')
+        print(validated_data['photo'])
+
+        self.s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=file_name)
+        print(start_time - time.time())
+        
         end_time = time.time()
         validated_data['prediction_time'] = end_time - start_time
+
+        print(validated_data['prediction_time'])
         return Images.objects.create(**validated_data)
     
 class WaterLevelSerializer(serializers.ModelSerializer):
