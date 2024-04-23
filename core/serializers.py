@@ -61,7 +61,9 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
                             file_name
                             )
         predict.delay(file_name, validated_data["system"])
-        return
+
+        # temp only to avoid assertion error
+        return Images.objects.first()
     
 class WaterLevelSerializer(serializers.ModelSerializer):
     secret_key = serializers.CharField(write_only=True)
