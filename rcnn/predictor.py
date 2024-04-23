@@ -1,45 +1,39 @@
-from tensorflow.keras.models import load_model
-from detectron2.engine import DefaultTrainer
-from detectron2.config import get_cfg
-from detectron2 import model_zoo
-import detectron2
 import os
-from detectron2.engine import DefaultPredictor
-from detectron2.utils.visualizer import Visualizer, ColorMode
-from detectron2.data.datasets import register_coco_instances
-from detectron2.data import MetadataCatalog
 from django.utils import timezone
-
-from django.core.files.base import ContentFile
-
-from .sort import Sort
-from core.models import Images, System, Detections
-import numpy as np
-import pandas as pd
-from datetime import datetime
-import cv2
-from PIL import Image
-import time as timer
-
-import torch
-
-from celery import shared_task
-import boto3
-
 from django.conf import settings
+from core.models import Images, System, Detections
+from datetime import datetime
+import time as timer
+import torch
+from celery import shared_task
 from io import BytesIO
+import numpy as np
 
 # Singleton class
 class RCNNPredictor:
     def __new__(cls,*args, **kwargs):
+        if not hasattr(cls, 'instance') and torch.cuda.is_available():
+            import detectron2
+            from tensorflow.keras.models import load_model
+            from detectron2.engine import DefaultTrainer
+            from detectron2.config import get_cfg
+            from detectron2 import model_zoo
+            from detectron2.engine import DefaultPredictor
+            from detectron2.utils.visualizer import Visualizer, ColorMode
+            from detectron2.data.datasets import register_coco_instances
+            from detectron2.data import MetadataCatalog
+            
+            import pandas as pd
+            from .sort import Sort
+            import cv2
+            from PIL import Image
+            import boto3
 
-        TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
-        CUDA_VERSION = torch.__version__.split("+")[-1]
-        print("torch: ", TORCH_VERSION, "; cuda: ", CUDA_VERSION)
-        print("detectron2:", detectron2.__version__)
-        print(torch.cuda.is_available())
+            TORCH_VERSION = ".".join(torch.__version__.split(".")[:2])
+            CUDA_VERSION = torch.__version__.split("+")[-1]
+            print("torch: ", TORCH_VERSION, "; cuda: ", CUDA_VERSION)
+            print("detectron2:", detectron2.__version__)
 
-        if not hasattr(cls, 'instance'):
             cls.instance = super(RCNNPredictor, cls).__new__(cls,*args, **kwargs)
             cfg = get_cfg()
             cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml"))
@@ -72,10 +66,17 @@ class RCNNPredictor:
                                     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
                                     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
                                 )
+        elif not torch.cuda.is_available():
+            print("CUDA not available")
+            cls.instance = super(RCNNPredictor, cls).__new__(cls,*args, **kwargs)
         else:
             print("Instance already exists")
         return cls.instance
     
+    def __init__(self) -> None:
+        if not torch.cuda.is_available():
+            raise Exception("Model requires CUDA to run. Please run on a machine with CUDA support.")
+        
     def _get_tracker(self, system_id):
         if system_id not in self.tracker:
             tracker = Sort()
