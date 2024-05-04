@@ -14,7 +14,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import os
-import io
 
 load_dotenv(".env")
 
@@ -165,3 +164,17 @@ AWS_SECRET_ACCESS_KEY = os.environ.get("SPACES_SECRET_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("SPACES_BUCKET_NAME")
 AWS_DEFAULT_ACL = "public-read"
                                        
+CELERY_BROKER_URL = os.environ.get("REDIS_CONNECTION_URL") + "?ssl_cert_reqs=CERT_REQUIRED"
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_CONNECTION_URL") + "?ssl_cert_reqs=CERT_REQUIRED" 
+
+CELERY_TASK_SERIALIZER = 'pickle'
+CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+
+# CELERY_SETTINGS = {
+#     'CELERY_BROKER_URL': os.environ.get("REDIS_CONNECTION_URL"),
+#     'CELERY_RESULT_BACKEND': os.environ.get("REDIS_CONNECTION_URL"),
+#     'CELERY_TASK_SERIALIZER': 'pickle',
+#     'CELERY_RESULT_SERIALIZER': 'pickle',
+#     'CELERY_ACCEPT_CONTENT': ['pickle'],
+# }

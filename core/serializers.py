@@ -3,12 +3,27 @@ from rest_framework import serializers
 from core.models import Images, System, Images, AreaCoverage, SystemWaterLevel
 import time
 
-from rcnn.predictor import RCNNPredictor
+from rcnn.predictor import predict
+from datetime import datetime
+from django.conf import settings
+import boto3
+from core.models import Detections
 
+from django.core.files.base import ContentFile
+ 
 class MosquitoImagesSerializer(serializers.ModelSerializer):
     # image_bmp = serializers.SerializerMethodField()
     secret_key = serializers.CharField(write_only=True)
     count = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        super(MosquitoImagesSerializer, self).__init__(*args, **kwargs)
+        self.s3 = boto3.client('s3', 
+                            region_name=settings.AWS_S3_REGION_NAME,
+                            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+                            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+                        )
 
     def get_count(self, obj):
         return obj.system.detections.count()
@@ -38,11 +53,17 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
         print(fields)
 
     def create(self, validated_data):
-        start_time = time.time()
-        validated_data["photo"], validated_data['detected_mosquito_count'] = RCNNPredictor()(validated_data["photo"], validated_data["system"])
-        end_time = time.time()
-        validated_data['prediction_time'] = end_time - start_time
-        return Images.objects.create(**validated_data)
+        system = validated_data["system"]
+        image = validated_data["photo"]
+        file_name = f'temp/system_{system.id}_{datetime.now().isoformat()}.jpg'
+        self.s3.upload_fileobj(image, 
+                            settings.AWS_STORAGE_BUCKET_NAME,
+                            file_name
+                            )
+        predict.delay(file_name, validated_data["system"])
+
+        # temp only to avoid assertion error
+        return Images.objects.first()
     
 class WaterLevelSerializer(serializers.ModelSerializer):
     secret_key = serializers.CharField(write_only=True)
@@ -137,6 +158,10 @@ class AreaCoverageSerializer(serializers.ModelSerializer):
             "systems": data["systems"]
         }
 
+class AreaListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AreaCoverage
+        fields = ['id','area_name']
 
  # def get_image_bmp(self, obj):
     #     img = Image.open(obj.image)
