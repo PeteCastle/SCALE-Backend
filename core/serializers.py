@@ -158,6 +158,10 @@ class AreaCoverageSerializer(serializers.ModelSerializer):
             "systems": data["systems"]
         }
 
+class AreaListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AreaCoverage
+        fields = ['id','area_name']
 
  # def get_image_bmp(self, obj):
     #     img = Image.open(obj.image)

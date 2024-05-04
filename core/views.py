@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .serializers import MosquitoImagesSerializer, SystemSerializer, ImageSerializer, AreaCoverageSerializer, WaterLevelSerializer
+from .serializers import MosquitoImagesSerializer, SystemSerializer, ImageSerializer, AreaCoverageSerializer, WaterLevelSerializer, AreaListSerializer
 from .models import Images, System, AreaCoverage, SystemFumigation, SystemWaterLevel, SystemStatus
 
 from django.db.models import Sum, Count, Max
@@ -43,6 +43,10 @@ class MosquitoImagesViewSet(viewsets.ModelViewSet):
             print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
+            SystemStatus.objects.create(
+                system_id=serializer.validated_data['system_id'],
+                status=True
+            )
             self.perform_create(serializer)
      
         # headers = self.get_success_headers(serializer.data)
@@ -91,6 +95,7 @@ class SystemViewSet(viewsets.ModelViewSet):
     def should_fumigate(self, request, system_id=None, *args, **kwargs):
         return Response(random.randint(0, 1), status=status.HTTP_200_OK)
 
+
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = Images.objects.all()
     serializer_class = ImageSerializer
@@ -113,9 +118,14 @@ class CoverageViewSet(viewsets.ModelViewSet):
     queryset = AreaCoverage.objects.all()
     serializer_class = AreaCoverageSerializer
 
+
     def retrieve(self, request, area_id = None, *args, **kwargs):
         area = self.queryset.get(id = area_id)
         serializer = AreaCoverageSerializer(area)
+        return Response(serializer.data)
+    
+    def list(self, request, *args, **kwargs):
+        serializer = AreaListSerializer(self.queryset, many=True)
         return Response(serializer.data)
     
 class DashboardFumigationViewSet(viewsets.ModelViewSet):
@@ -159,7 +169,7 @@ class DashboardFumigationViewSet(viewsets.ModelViewSet):
     
     def count_by_week(self, request, *args, **kwargs):
         system_ids = request.query_params.get('system', None)
-        # month_date = request.query_params.get('date', None)
+        month_date = request.query_params.get('date', None)
 
         data = System.objects.annotate(
             fumigation_date=TruncWeek('systemfumigation__fumigation_date'),

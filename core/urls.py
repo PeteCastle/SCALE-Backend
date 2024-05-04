@@ -24,6 +24,7 @@ urlpatterns = [
     path("v1/system/<int:system_id>/captures/recent", ImageViewSet.as_view({"get": "recent"})),
     path("v1/system/<int:system_id>/captures/history", ImageViewSet.as_view({"get": "history"})),
     path("v1/coverage/<int:area_id>", CoverageViewSet.as_view({"get": "retrieve"}, name="coverage")),
+    path("v1/coverage/list", CoverageViewSet.as_view({"get": "list"})),
 
     path("v1/dashboard/fumigations/date", DashboardFumigationViewSet.as_view({"get": "count_by_date"})),
     path("v1/dashboard/fumigations/system", DashboardFumigationViewSet.as_view({"get": "count_by_system"})),

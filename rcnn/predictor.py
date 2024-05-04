@@ -183,7 +183,7 @@ def predict(self, file_name, system: System) -> np.ndarray:
         "photo": ContentFile(image,f'system_{system.id}_{datetime.now().isoformat()}.jpg'),
         "prediction_time" : time.time() - start_time,
         "system": system,
-        "area": system.first().coverage,
+        "area": system.coverage,
         "detected_mosquito_count": new_detection_count
     })
 
