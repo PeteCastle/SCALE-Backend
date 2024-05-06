@@ -3,7 +3,7 @@ from rest_framework import serializers
 from core.models import Images, System, Images, AreaCoverage, SystemWaterLevel
 import time
 
-from rcnn.predictor import predict
+from rcnn.predictor import predict, test
 from datetime import datetime
 from django.conf import settings
 import boto3
@@ -61,7 +61,8 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
                             file_name
                             )
         print("Start async task")
-        predict.delay(file_name, validated_data["system"])
+        test.delay()
+        # predict.delay(file_name, validated_data["system"])
         print("End async task")
         # temp only to avoid assertion error
         return Images.objects.first()
