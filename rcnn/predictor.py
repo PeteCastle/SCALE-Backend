@@ -135,7 +135,7 @@ class RCNNPredictor:
         for i, result in enumerate(trackers):
             x1, y1, x2, y2, id = result
             if id not in id_list:
-                detections += {
+                detections.append({
                     'detection_id': id,
                     'x1': x1,
                     'y1': y1,
@@ -143,7 +143,7 @@ class RCNNPredictor:
                     'y2': y2,
                     'score': scores[i],
                     'detected_time': timezone.now()
-                }
+                })
                 new_detection_count+=1
                 
                 # if created:
