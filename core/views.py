@@ -391,8 +391,8 @@ class DashboardKPIViewSet(viewsets.ModelViewSet):
 
         return Response(
             {
-            "average_inference_time":average_inference_time,
-            "average_confidence":average_confidence,
+            "average_inference_time":round(average_inference_time,2),
+            "average_confidence":round(average_confidence,2),
             "precision_score": 0.919, # Values were obtained from latest test data.  This should be automated soon.
             "recall_score": 0.521,
 
