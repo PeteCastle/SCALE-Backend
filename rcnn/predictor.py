@@ -161,10 +161,10 @@ class RCNNPredictor:
                     new_detection_count, 
                     buffer)
 
-@shared_task
-def test():
-    print("Test task")
-    return
+# @shared_task
+# def test():
+#     print("Test task")
+#     return
 
 @shared_task(bind=True)
 def predict(self, file_name, system: System) -> np.ndarray:
