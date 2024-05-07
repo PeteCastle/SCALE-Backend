@@ -3,7 +3,7 @@ from rest_framework import serializers
 from core.models import Images, System, Images, AreaCoverage, SystemWaterLevel
 import time
 
-from rcnn.predictor import predict, test
+from rcnn.predictor import predict
 from datetime import datetime
 from django.conf import settings
 import boto3
