@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .serializers import MosquitoImagesSerializer, SystemSerializer, ImageSerializer, AreaCoverageSerializer, WaterLevelSerializer, AreaListSerializer
-from .models import Images, System, AreaCoverage, SystemFumigation, SystemWaterLevel, SystemStatus
+from .models import Images, System, AreaCoverage, SystemFumigation, SystemWaterLevel, SystemStatus, Detections
 
 from django.db.models import Sum, Count, Max
 from django.db.models.functions import TruncDate, TruncMinute, TruncWeek, TruncMonth, TruncHour
@@ -20,6 +20,9 @@ from datetime import timedelta, datetime
 from django.core.files.base import ContentFile
 from dateutil.relativedelta import relativedelta
 import random
+
+from django.db.models import Avg
+
 
 # Create your views here.
 class MosquitoImagesViewSet(viewsets.ModelViewSet):
@@ -377,12 +380,21 @@ class DashboardWaterLevelViewSet(viewsets.ModelViewSet):
 
 class DashboardKPIViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
+
+        average_inference_time = Images.objects.all().aggregate(Avg('prediction_time'))['prediction_time__avg']
+        if average_inference_time is None:
+            average_inference_time = 0
+
+        average_confidence = Detections.objects.all().aggregate(Avg('score'))['score__avg']
+        if average_confidence is None:
+            average_confidence = 0
+
         return Response(
             {
-            "average_inference_time":69420,
-            "average_confidence":0.89,
-            "precision_score": 0.90,
-            "recall_score": 0.90,
+            "average_inference_time":average_inference_time,
+            "average_confidence":average_confidence,
+            "precision_score": 0.919, # Values were obtained from latest test data.  This should be automated soon.
+            "recall_score": 0.521,
 
         }
         )
