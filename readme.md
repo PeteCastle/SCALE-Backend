@@ -1,4 +1,4 @@
-# SCALE - Mosquito Detection and Fumigation (Deep Learning)
+# SCALE - Mosquito Detection and Fumigation (Backend)
 
 This repo is part of our thesis project entitled "**SCALE: Mosquito Detection and Fumigation System Utilizing Convolutional Neural Networks**". The project aims to develop a deep learning model for detecting and localizing mosquitoes in images. The model will be used to support fumigation efforts by identifying areas with high mosquito populations. This repository  involves the backend API of the project, utilizing Django REST Framework and Celery for the model's deployment.
 
