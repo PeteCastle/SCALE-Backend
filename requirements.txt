@@ -15,7 +15,6 @@ gunicorn
 django-cors-headers
 celery==5.4.0
 redis==5.0.3
-# git+https://github.com/facebookresearch/detectron2.git
 torch==2.2.0
 opencv-python
 

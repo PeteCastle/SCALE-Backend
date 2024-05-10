@@ -60,8 +60,10 @@ class MosquitoImagesSerializer(serializers.ModelSerializer):
                             settings.AWS_STORAGE_BUCKET_NAME,
                             file_name
                             )
+        # print("Start async task")
+        # test.delay()
         predict.delay(file_name, validated_data["system"])
-
+        # print("End async task")
         # temp only to avoid assertion error
         return Images.objects.first()
     
